@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { FlameIcon, HomeIcon, PlaySquareIcon } from "lucide-react";
+import { useAuth, useClerk } from "@clerk/nextjs";
 
 const items = [
   {
@@ -33,7 +34,9 @@ const items = [
 ];
 
 export const MainSection = () => {
-  const isSignedIn = false;
+  const clerk = useClerk();
+  const { isSignedIn } = useAuth();
+
   const pathname = usePathname();
 
   return (
@@ -49,7 +52,7 @@ export const MainSection = () => {
                 onClick={(e) => {
                   if (!isSignedIn && item.isAuthedAction) {
                     e.preventDefault();
-                    // return clerk.openSignIn();
+                    return clerk.openSignIn();
                   }
                 }}
               >
