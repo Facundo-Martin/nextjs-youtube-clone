@@ -15,6 +15,13 @@
       "when": 1757953612586,
       "tag": "0001_perfect_ken_ellis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758055553959,
+      "tag": "0002_big_lightspeed",
+      "breakpoints": true
     }
   ]
 }
