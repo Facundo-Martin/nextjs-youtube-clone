@@ -12,6 +12,9 @@ import { ZodError } from "zod";
 
 import { db } from "@/server/db";
 import { auth } from "@clerk/nextjs/server";
+import { ratelimit } from "@/lib/redis";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * 1. CONTEXT
@@ -26,9 +29,14 @@ import { auth } from "@clerk/nextjs/server";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const { userId: clerkUserId, ...rest } = await auth();
   return {
     db,
     ...opts,
+    auth: {
+      clerkUserId,
+      ...rest,
+    },
   };
 };
 
@@ -98,41 +106,103 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 });
 
 /**
+ * Universal rate limiting middleware for both authenticated and unauthenticated users
+ */
+const rateLimitMiddleware = t.middleware(async ({ next, ctx }) => {
+  // Use clerkUserId if available, otherwise fall back to IP
+  const identifier =
+    ctx.auth.clerkUserId ??
+    ctx.headers.get("x-forwarded-for") ??
+    ctx.headers.get("x-real-ip") ??
+    "anonymous";
+
+  const { success, limit, reset, remaining } =
+    await ratelimit.limit(identifier);
+
+  if (!success) {
+    const resetTime = new Date(reset);
+    const now = new Date();
+    const secondsToWait = Math.round(
+      (resetTime.getTime() - now.getTime()) / 1000,
+    );
+
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `Rate limit exceeded. Try again in ${secondsToWait} seconds.`,
+    });
+  }
+
+  // Optional: Log rate limit info
+  const userType = ctx.auth.clerkUserId ? "authenticated" : "anonymous";
+  console.log(
+    `[RATE_LIMIT] ${userType} user (${identifier}): ${remaining}/${limit} requests remaining`,
+  );
+
+  return next();
+});
+/**
  * Public (unauthenticated) procedure
  *
  * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure.use(timingMiddleware);
+export const publicProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(rateLimitMiddleware);
 
 /**
  * Helper function for checking whether the user is authed or not
  */
-const isAuthenticated = t.middleware(async ({ next, ctx }) => {
-  const user = await auth();
-
-  if (!user || !user.userId) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "You must be logged in to access this resource",
-    });
+const isAuthed = t.middleware(({ next, ctx }) => {
+  if (!ctx.auth.clerkUserId) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-
-  const { userId: clerkUserId, ...rest } = user;
 
   return next({
     ctx: {
       ...ctx,
-      user: {
-        ...rest,
-        clerkUserId,
+      auth: {
+        ...ctx.auth,
+        clerkUserId: ctx.auth.clerkUserId,
       },
     },
   });
 });
 
+const withUser = t.middleware(async ({ next, ctx }) => {
+  if (!ctx.auth.clerkUserId) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "clerkUserId should be defined",
+    });
+  }
+
+  const [user] = await ctx.db
+    .select()
+    .from(users)
+    .where(eq(users.clerkId, ctx.auth.clerkUserId));
+
+  if (!user) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "User not found in database",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      user,
+    },
+  });
+});
+
 /**
- * Protected (authenticated) procedure
+ * Protected (authenticated) procedure with rate limiting
  */
-export const protectedProcedure = t.procedure.use(isAuthenticated);
+export const protectedProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(rateLimitMiddleware)
+  .use(isAuthed)
+  .use(withUser);
