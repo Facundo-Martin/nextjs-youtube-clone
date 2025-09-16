@@ -119,10 +119,15 @@ const isAuthenticated = t.middleware(async ({ next, ctx }) => {
     });
   }
 
+  const { userId: clerkUserId, ...rest } = user;
+
   return next({
     ctx: {
       ...ctx,
-      user,
+      user: {
+        ...rest,
+        clerkUserId,
+      },
     },
   });
 });
