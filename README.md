@@ -27,3 +27,10 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 ## How do I deploy this?
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+
+### Project features:
+
+- Repo started with T3 stack!
+- Clerk authentication with webhooks for data synchronization
+- Responsive web components like sidebar from shadcn/ui
+- tRPC as an API layer with tanstack query
