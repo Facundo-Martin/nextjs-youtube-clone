@@ -34,3 +34,10 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 - Clerk authentication with webhooks for data synchronization
 - Responsive web components like sidebar from shadcn/ui
 - tRPC as an API layer with tanstack query
+- Prefetch data with tanstack and then useSuspenseQuery
+
+### Refactor todo list
+
+- Carousel logic is a mess
+- Carousel query params handling for nuqs
+- Rm modules folder and just use \_components inside route groups

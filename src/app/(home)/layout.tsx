@@ -1,9 +1,5 @@
 import { HomeLayout } from "@/modules/home/ui/layout/home-layout";
 
-type Props = {
-  children: React.ReactNode;
-};
-
-export default function Layout({ children }: Props) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return <HomeLayout>{children}</HomeLayout>;
 }

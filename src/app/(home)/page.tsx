@@ -1,21 +1,25 @@
-import { api, HydrateClient } from "@/trpc/server";
-import { auth } from "@clerk/nextjs/server";
-import Image from "next/image";
 import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
 
-export default async function Home() {
-  const user = await auth();
-  void api.user.get.prefetch({ clerkId: user.userId! });
+import { api, HydrateClient } from "@/trpc/server";
+import { ErrorBoundary } from "react-error-boundary";
+import { HomeView } from "@/modules/home/ui/components/views/home-view";
+
+export const dynamic = "force-dynamic";
+
+type Props = {
+  searchParams: Promise<{
+    categoryId?: string;
+  }>;
+};
+
+// TODO: Rm this in favor of nuqs
+export default async function Home({ searchParams }: Props) {
+  const { categoryId } = await searchParams;
+  void api.category.getAll.prefetch();
 
   return (
     <HydrateClient>
-      <Suspense>
-        <ErrorBoundary fallback={<p>Error...</p>}>
-          <Image src="/logo.svg" height={50} width={50} alt="Logo" />
-          <p className="text-xl font-semibold tracking-tight">Home page</p>
-        </ErrorBoundary>
-      </Suspense>
+      <HomeView categoryId={categoryId} />
     </HydrateClient>
   );
 }
