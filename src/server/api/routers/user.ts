@@ -9,16 +9,7 @@ export const userRouter = createTRPCRouter({
     .input(z.object({ clerkId: z.string() }))
     .query(async ({ ctx, input }) => {
       const [user] = await ctx.db
-        .select({
-          id: users.id,
-          clerkId: users.clerkId,
-          name: users.name,
-          bannerUrl: users.bannerUrl,
-          bannerKey: users.bannerKey,
-          imageUrl: users.imageUrl,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        })
+        .select()
         .from(users)
         .where(eq(users.clerkId, input.clerkId))
         .limit(1);
