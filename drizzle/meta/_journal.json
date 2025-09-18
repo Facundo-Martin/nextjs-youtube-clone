@@ -22,6 +22,13 @@
       "when": 1758055553959,
       "tag": "0002_big_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758212251480,
+      "tag": "0003_jazzy_roulette",
+      "breakpoints": true
     }
   ]
 }
