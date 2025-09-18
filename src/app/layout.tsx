@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 
 import { ClerkProvider } from "@clerk/nextjs";
 import { TRPCReactProvider } from "@/trpc/react";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -23,6 +24,7 @@ export default function RootLayout({
     <ClerkProvider afterSignOutUrl="/">
       <html lang="en" className={inter.className}>
         <body>
+          <Toaster />
           <TRPCReactProvider>{children}</TRPCReactProvider>
         </body>
       </html>
