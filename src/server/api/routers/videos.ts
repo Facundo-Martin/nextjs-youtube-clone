@@ -7,6 +7,7 @@ import {
 } from "@/server/api/trpc";
 import { videos } from "@/server/db/schema";
 import { and, desc, eq, lt, or } from "drizzle-orm";
+import { mux } from "@/lib/mux";
 
 export const videoRouter = createTRPCRouter({
   get: protectedProcedure
@@ -25,6 +26,16 @@ export const videoRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id: userId } = ctx.user;
 
+      const upload = await mux.video.uploads.create({
+        cors_origin: "*", // TODO: In prod, update the url
+        new_asset_settings: {
+          passthrough: userId,
+          playback_policies: ["public"],
+          static_renditions: [{ resolution: "highest" }],
+          video_quality: "basic",
+        },
+      });
+
       const [video] = await ctx.db
         .insert(videos)
         .values({
@@ -33,7 +44,7 @@ export const videoRouter = createTRPCRouter({
         })
         .returning();
 
-      return video;
+      return { video, uploadUrl: upload.url };
     }),
   getAll: protectedProcedure
     .input(
