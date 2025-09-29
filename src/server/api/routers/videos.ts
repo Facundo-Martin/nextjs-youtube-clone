@@ -33,6 +33,9 @@ export const videoRouter = createTRPCRouter({
           playback_policies: ["public"],
           static_renditions: [{ resolution: "highest" }],
           video_quality: "basic",
+          input: [
+            { generated_subtitles: [{ language_code: "en", name: "English" }] },
+          ],
         },
       });
 
