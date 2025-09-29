@@ -19,6 +19,7 @@ import {
 import { api } from "@/trpc/react";
 import { DEFAULT_QUERY_LIMIT } from "@/lib/constants";
 import { VideoThumbnail } from "@/modules/videos/ui/components/video-thumbnail";
+import { snakeCaseToTitle } from "@/lib/utils";
 
 export const VideosSection = () => {
   return (
@@ -124,14 +125,31 @@ const VideosSectionSuspense = () => {
                     <TableCell>
                       <div className="flex items-center gap-4">
                         <div className="relative aspect-video w-36 shrink-0">
-                          <VideoThumbnail imageUrl={video.thumbnailUrl} />
+                          <VideoThumbnail
+                            title={video.title}
+                            duration={video.duration}
+                            imageUrl={video.thumbnailUrl}
+                            previewUrl={video.previewUrl}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-y-1 overflow-hidden">
+                          <span className="line-clamp-1 text-sm">
+                            {video.title}
+                          </span>
+                          <span className="text-muted-foreground line-clamp-1 text-xs">
+                            {video.description ?? "No description"}
+                          </span>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>visibility</TableCell>
-                    <TableCell>status</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {snakeCaseToTitle(video.muxStatus ?? "error")}
+                      </div>
+                    </TableCell>
                     <TableCell className="truncate text-sm">
-                      {format(new Date(video.createdAt), "d MMM yyyy")}
+                      {format(video.createdAt, "d MMM yyyy")}
                     </TableCell>
                     <TableCell className="text-right text-sm">
                       Views count

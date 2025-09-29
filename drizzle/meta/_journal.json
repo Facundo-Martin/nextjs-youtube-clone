@@ -43,6 +43,13 @@
       "when": 1759149433824,
       "tag": "0005_salty_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1759152267212,
+      "tag": "0006_unknown_doorman",
+      "breakpoints": true
     }
   ]
 }

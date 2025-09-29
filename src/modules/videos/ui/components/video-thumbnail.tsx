@@ -1,23 +1,41 @@
+import { formatDuration } from "@/lib/utils";
+import type { SelectVideo } from "@/server/db/schema";
 import Image from "next/image";
 
 type Props = {
-  imageUrl?: string | null;
+  title: SelectVideo["title"];
+  duration: SelectVideo["duration"];
+  imageUrl: SelectVideo["thumbnailUrl"];
+  previewUrl: SelectVideo["previewUrl"];
 };
 
-export const VideoThumbnail = ({ imageUrl }: Props) => {
+export const VideoThumbnail = ({
+  title,
+  duration,
+  imageUrl,
+  previewUrl,
+}: Props) => {
   return (
-    <div className="relative">
+    <div className="group relative">
       {/* Thumbnaiul wrapepr */}
       <div className="relative aspect-video w-full overflow-hidden rounded-xl">
         <Image
           src={imageUrl ?? "/placeholder.svg"}
-          alt="Thumbnail"
+          alt={title}
           fill
-          className="size-full object-cover"
+          className="size-full object-cover group-hover:opacity-0"
+        />
+        <Image
+          src={previewUrl ?? "/placeholder.svg"}
+          alt={title}
+          fill
+          className="size-full object-cover opacity-0 group-hover:opacity-100"
         />
       </div>
 
-      <div></div>
+      <div className="py- absolute right-2 bottom-2 rounded bg-black/80 px-1 py-0.5 text-xs text-white">
+        {formatDuration(duration ?? 0)}
+      </div>
     </div>
   );
 };
