@@ -18,6 +18,7 @@ import {
 
 import { api } from "@/trpc/react";
 import { DEFAULT_QUERY_LIMIT } from "@/lib/constants";
+import { VideoThumbnail } from "@/modules/videos/ui/components/video-thumbnail";
 
 export const VideosSection = () => {
   return (
@@ -120,7 +121,13 @@ const VideosSectionSuspense = () => {
                   legacyBehavior
                 >
                   <TableRow className="cursor-pointer">
-                    <TableCell className="pl-6">Video thumbnail</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="relative aspect-video w-36 shrink-0">
+                          <VideoThumbnail imageUrl={video.thumbnailUrl} />
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>visibility</TableCell>
                     <TableCell>status</TableCell>
                     <TableCell className="truncate text-sm">
