@@ -1,23 +1,26 @@
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "@/server/api/trpc";
-import { videos } from "@/server/db/schema";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { videos, videoUpdateSchema } from "@/server/db/schema";
 import { and, desc, eq, lt, or } from "drizzle-orm";
 import { mux } from "@/lib/mux";
+import { TRPCError } from "@trpc/server";
 
 export const videoRouter = createTRPCRouter({
   get: protectedProcedure
-    .input(z.object({ videoId: z.string() }))
+    .input(z.object({ videoId: z.uuid().min(1) }))
     .query(async ({ ctx, input }) => {
       const [video] = await ctx.db
         .select()
         .from(videos)
-        .where(eq(videos.id, input.videoId))
+        .where(
+          and(eq(videos.id, input.videoId), eq(videos.userId, ctx.user.id)),
+        )
         .limit(1);
+
+      if (!video) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
 
       return video;
     }),
@@ -50,6 +53,33 @@ export const videoRouter = createTRPCRouter({
         .returning();
 
       return { video, uploadUrl: upload.url };
+    }),
+  update: protectedProcedure
+    .input(videoUpdateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      if (!input.id) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const [updatedVideo] = await ctx.db
+        .update(videos)
+        .set({
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId,
+          visibility: input.visibility,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      if (!updatedVideo) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      return { updatedVideo };
     }),
   getAll: protectedProcedure
     .input(

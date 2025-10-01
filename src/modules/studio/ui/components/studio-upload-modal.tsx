@@ -7,8 +7,10 @@ import { Loader2Icon, PlusIcon } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { StudioUploader } from "./studio-uploader";
+import { useRouter } from "next/navigation";
 
 export const StudioUploadModal = () => {
+  const router = useRouter();
   const utils = api.useUtils();
   const createVideo = api.video.create.useMutation({
     onSuccess: () => {
@@ -20,6 +22,13 @@ export const StudioUploadModal = () => {
     },
   });
 
+  const onSuccess = () => {
+    if (!createVideo.data?.video) return;
+
+    createVideo.reset();
+    router.push(`/studio/videos/${createVideo.data.video.id}`);
+  };
+
   return (
     <>
       <ResponsiveModal
@@ -30,7 +39,7 @@ export const StudioUploadModal = () => {
         {createVideo.data?.uploadUrl ? (
           <StudioUploader
             endpoint={createVideo.data?.uploadUrl}
-            onSuccess={() => null}
+            onSuccess={onSuccess}
           />
         ) : (
           <Loader2Icon />

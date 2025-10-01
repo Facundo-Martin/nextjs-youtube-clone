@@ -34,10 +34,12 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 - Clerk authentication with webhooks for data synchronization
 - Responsive web components like sidebar from shadcn/ui
 - tRPC as an API layer with tanstack query
-- Prefetch data with tanstack and then useSuspenseQuery
+- Prefetch data on server side with tanstack and useSuspenseQuery
+- Mux webhooks for video management
 
 ### Refactor todo list
 
 - Carousel logic is a mess
 - Carousel query params handling for nuqs
 - Rm modules folder and just use \_components inside route groups
+- Make webhook invalidate /studio/videos/videoId page so we can see changes in real time
