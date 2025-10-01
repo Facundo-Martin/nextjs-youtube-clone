@@ -7,23 +7,6 @@ import { mux } from "@/lib/mux";
 import { TRPCError } from "@trpc/server";
 
 export const videoRouter = createTRPCRouter({
-  get: protectedProcedure
-    .input(z.object({ videoId: z.uuid().min(1) }))
-    .query(async ({ ctx, input }) => {
-      const [video] = await ctx.db
-        .select()
-        .from(videos)
-        .where(
-          and(eq(videos.id, input.videoId), eq(videos.userId, ctx.user.id)),
-        )
-        .limit(1);
-
-      if (!video) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
-
-      return video;
-    }),
   create: protectedProcedure
     .input(z.object({ title: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
@@ -54,32 +37,22 @@ export const videoRouter = createTRPCRouter({
 
       return { video, uploadUrl: upload.url };
     }),
-  update: protectedProcedure
-    .input(videoUpdateSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id: userId } = ctx.user;
+  get: protectedProcedure
+    .input(z.object({ videoId: z.uuid().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const [video] = await ctx.db
+        .select()
+        .from(videos)
+        .where(
+          and(eq(videos.id, input.videoId), eq(videos.userId, ctx.user.id)),
+        )
+        .limit(1);
 
-      if (!input.id) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
-      }
-
-      const [updatedVideo] = await ctx.db
-        .update(videos)
-        .set({
-          title: input.title,
-          description: input.description,
-          categoryId: input.categoryId,
-          visibility: input.visibility,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
-        .returning();
-
-      if (!updatedVideo) {
+      if (!video) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      return { updatedVideo };
+      return video;
     }),
   getAll: protectedProcedure
     .input(
@@ -132,5 +105,54 @@ export const videoRouter = createTRPCRouter({
           : null;
 
       return { items, nextCursor, hasNextPage };
+    }),
+
+  update: protectedProcedure
+    .input(videoUpdateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      if (!input.id) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const [updatedVideo] = await ctx.db
+        .update(videos)
+        .set({
+          title: input.title,
+          description: input.description,
+          categoryId: input.categoryId,
+          visibility: input.visibility,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      if (!updatedVideo) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      return { updatedVideo };
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ videoId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      if (!input.videoId) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const [deletedVideo] = await ctx.db
+        .delete(videos)
+        .where(and(eq(videos.id, input.videoId), eq(videos.userId, userId)))
+        .returning();
+
+      if (!deletedVideo) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      return { deletedVideo };
     }),
 });

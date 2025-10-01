@@ -45,12 +45,14 @@ import { VideoPlayer } from "./video-player";
 import Link from "next/link";
 import { useState } from "react";
 import { snakeCaseToTitle } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 type Props = {
   videoId: string;
 };
 
 export const VideoForm = ({ videoId }: Props) => {
+  const router = useRouter();
   const [video] = api.video.get.useSuspenseQuery({ videoId });
   const [categories] = api.category.getAll.useSuspenseQuery();
 
@@ -61,6 +63,15 @@ export const VideoForm = ({ videoId }: Props) => {
       void utils.video.getAll.invalidate();
       void utils.video.get.invalidate({ videoId });
       toast.success("Video updated succesfully");
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
+  const deleteVideo = api.video.delete.useMutation({
+    onSuccess: () => {
+      void utils.video.getAll.invalidate();
+      toast.success("Video removed succesfully");
+      router.push("/studio");
     },
     onError: () => toast.error("Something went wrong"),
   });
@@ -107,7 +118,9 @@ export const VideoForm = ({ videoId }: Props) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => deleteVideo.mutate({ videoId })}
+                >
                   <TrashIcon className="mr-2 size-4" /> Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
