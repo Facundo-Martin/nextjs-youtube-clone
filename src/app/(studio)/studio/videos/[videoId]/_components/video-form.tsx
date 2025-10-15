@@ -80,6 +80,15 @@ export const VideoForm = ({ videoId }: Props) => {
     onError: () => toast.error("Something went wrong"),
   });
 
+  const restoreThumbnail = api.video.restoreThumbnail.useMutation({
+    onSuccess: () => {
+      void utils.video.getAll.invalidate();
+      void utils.video.get.invalidate({ videoId });
+      toast.success("Thumbnail restored succesfully");
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
   const form = useForm<z.infer<typeof videoUpdateSchema>>({
     resolver: zodResolver(videoUpdateSchema),
     defaultValues: video,
@@ -215,7 +224,11 @@ export const VideoForm = ({ videoId }: Props) => {
                               <SparklesIcon className="mr-1 size-4" />
                               AI-generated
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                restoreThumbnail.mutate({ videoId })
+                              }
+                            >
                               <RotateCcwIcon className="mr-1 size-4" />
                               Restore
                             </DropdownMenuItem>

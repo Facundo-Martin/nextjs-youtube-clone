@@ -5,6 +5,7 @@ import { videos, videoUpdateSchema } from "@/server/db/schema";
 import { and, desc, eq, lt, or } from "drizzle-orm";
 import { mux } from "@/lib/mux";
 import { TRPCError } from "@trpc/server";
+import { db } from "@/server/db";
 
 export const videoRouter = createTRPCRouter({
   create: protectedProcedure
@@ -154,5 +155,33 @@ export const videoRouter = createTRPCRouter({
       }
 
       return { deletedVideo };
+    }),
+  restoreThumbnail: protectedProcedure
+    .input(z.object({ videoId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      const [existingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.videoId), eq(videos.userId, userId)));
+
+      if (!existingVideo) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
+      if (!existingVideo.muxPlaybackId) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const thumbnailUrl = `https://image.mux.com/${existingVideo.muxPlaybackId}/thumbnail.png`;
+
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({ thumbnailUrl })
+        .where(and(eq(videos.id, input.videoId), eq(videos.userId, userId)))
+        .returning();
+
+      return updatedVideo;
     }),
 });
