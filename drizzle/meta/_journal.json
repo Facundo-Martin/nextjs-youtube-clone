@@ -50,6 +50,13 @@
       "when": 1759152267212,
       "tag": "0006_unknown_doorman",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1760554865273,
+      "tag": "0007_illegal_hellion",
+      "breakpoints": true
     }
   ]
 }
