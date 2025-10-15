@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
+import { UTApi } from "uploadthing/server";
 import type {
   VideoAssetCreatedWebhookEvent,
   VideoAssetErroredWebhookEvent,
@@ -83,9 +84,25 @@ export const POST = async (request: Request) => {
           return new Response("Missing playback ID", { status: 400 });
         }
 
-        const thumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.png`;
-        const previewUrl = `https://image.mux.com/${playbackId}/animated.gif`;
+        const tempThumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.png`;
+        const tempPreviewUrl = `https://image.mux.com/${playbackId}/animated.gif`;
         const duration = Math.round(data.duration ?? 0 * 1000);
+
+        const utapi = new UTApi();
+
+        const [uploadedThumbnail, uploadedPreviewUrl] =
+          await utapi.uploadFilesFromUrl([tempPreviewUrl, tempThumbnailUrl]);
+
+        if (!uploadedThumbnail?.data || !uploadedPreviewUrl?.data) {
+          return new Response("Failed to upload thumbnail or preview", {
+            status: 500,
+          });
+        }
+
+        const { key: thumbnailKey, ufsUrl: thumbnailUrl } =
+          uploadedThumbnail.data;
+
+        const { key: previewKey, ufsUrl: previewUrl } = uploadedThumbnail.data;
 
         await db
           .update(videos)
@@ -95,7 +112,9 @@ export const POST = async (request: Request) => {
             muxAssetId: data.id,
             duration,
             previewUrl,
+            previewKey,
             thumbnailUrl,
+            thumbnailKey,
           })
           .where(eq(videos.muxUploadId, data.upload_id));
       }
