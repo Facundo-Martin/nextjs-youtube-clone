@@ -102,7 +102,7 @@ export const POST = async (request: Request) => {
         const { key: thumbnailKey, ufsUrl: thumbnailUrl } =
           uploadedThumbnail.data;
 
-        const { key: previewKey, ufsUrl: previewUrl } = uploadedThumbnail.data;
+        const { key: previewKey, ufsUrl: previewUrl } = uploadedPreviewUrl.data;
 
         await db
           .update(videos)
