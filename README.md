@@ -36,6 +36,7 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 - tRPC as an API layer with tanstack query
 - Prefetch data on server side with tanstack and useSuspenseQuery
 - Mux webhooks for video management
+- AI tasks with background jobs using upstash (npx @upstash/qstash-cli dev) => New Upstash workflows
 
 ### Refactor todo list
 

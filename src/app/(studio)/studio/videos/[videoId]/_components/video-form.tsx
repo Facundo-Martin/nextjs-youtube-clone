@@ -80,6 +80,15 @@ export const VideoForm = ({ videoId }: Props) => {
     onError: () => toast.error("Something went wrong"),
   });
 
+  const generateThumbnail = api.video.generateThumbnail.useMutation({
+    onSuccess: () => {
+      toast.success("Background job started", {
+        description: "This may take some time",
+      });
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
   const restoreThumbnail = api.video.restoreThumbnail.useMutation({
     onSuccess: () => {
       void utils.video.getAll.invalidate();
@@ -220,7 +229,11 @@ export const VideoForm = ({ videoId }: Props) => {
                               <ImagePlusIcon className="mr-1 size-4" />
                               Change
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                generateThumbnail.mutate({ videoId })
+                              }
+                            >
                               <SparklesIcon className="mr-1 size-4" />
                               AI-generated
                             </DropdownMenuItem>

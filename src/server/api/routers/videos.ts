@@ -7,6 +7,7 @@ import { mux } from "@/lib/mux";
 import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
 import { UTApi } from "uploadthing/server";
+import { workflow } from "@/lib/qstash";
 
 export const videoRouter = createTRPCRouter({
   create: protectedProcedure
@@ -206,5 +207,19 @@ export const videoRouter = createTRPCRouter({
         .returning();
 
       return updatedVideo;
+    }),
+  generateThumbnail: protectedProcedure
+    .input(z.object({ videoId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+
+      const { workflowRunId } = await workflow.trigger({
+        url: `${process.env.UPSTASH_WORKFLOW_URL!}/api/videos/workflows/title`,
+        retries: 3,
+        keepTriggerConfig: true,
+        body: { userId, videoId: input.videoId },
+      });
+
+      return workflowRunId;
     }),
 });
