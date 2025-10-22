@@ -1,3 +1,4 @@
+import { env } from "@/env";
 import { db } from "@/server/db";
 import { videos } from "@/server/db/schema";
 import { serve } from "@upstash/workflow/nextjs";
@@ -48,7 +49,7 @@ export const { POST } = serve(async (context) => {
   const { status, body } = await context.api.openai.call(
     "generate-description",
     {
-      token: process.env.OPENAI_API_KEY!,
+      token: env.OPENAI_API_KEY,
       operation: "chat.completions.create",
       body: {
         model: "gpt-4o",

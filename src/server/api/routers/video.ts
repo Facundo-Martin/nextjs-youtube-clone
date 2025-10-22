@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
 import { UTApi } from "uploadthing/server";
 import { workflow } from "@/lib/qstash";
+import { env } from "@/env";
 
 export const videoRouter = createTRPCRouter({
   create: protectedProcedure
@@ -214,7 +215,7 @@ export const videoRouter = createTRPCRouter({
       const { id: userId } = ctx.user;
 
       const { workflowRunId } = await workflow.trigger({
-        url: `${process.env.UPSTASH_WORKFLOW_URL!}/api/videos/workflows/thumbnail`,
+        url: `${env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/thumbnail`,
         retries: 3,
         keepTriggerConfig: true,
         body: { userId, videoId: input.videoId, prompt: input.prompt },
@@ -228,7 +229,7 @@ export const videoRouter = createTRPCRouter({
       const { id: userId } = ctx.user;
 
       const { workflowRunId } = await workflow.trigger({
-        url: `${process.env.UPSTASH_WORKFLOW_URL!}/api/videos/workflows/title`,
+        url: `${env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/title`,
         retries: 3,
         keepTriggerConfig: true,
         body: { userId, videoId: input.videoId },
@@ -242,7 +243,7 @@ export const videoRouter = createTRPCRouter({
       const { id: userId } = ctx.user;
 
       const { workflowRunId } = await workflow.trigger({
-        url: `${process.env.UPSTASH_WORKFLOW_URL!}/api/videos/workflows/description`,
+        url: `${env.UPSTASH_WORKFLOW_URL}/api/videos/workflows/description`,
         retries: 3,
         keepTriggerConfig: true,
         body: { userId, videoId: input.videoId },
