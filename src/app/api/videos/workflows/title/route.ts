@@ -34,6 +34,18 @@ export const { POST } = serve(async (context) => {
 
   console.log(video);
 
+  const transcript = await context.run("get-transcript", async () => {
+    const trackUrl = `https://stream.mux.com/${video.muxPlaybackId}/text/${video.muxTrackId}.txt`;
+    const response = await fetch(trackUrl);
+    const text = await response.text();
+
+    if (!text) {
+      throw new Error("Bad request");
+    }
+
+    return text;
+  });
+
   const { status, body } = await context.api.openai.call("generate-title", {
     token: process.env.OPENAI_API_KEY!,
     operation: "chat.completions.create",
@@ -46,24 +58,22 @@ export const { POST } = serve(async (context) => {
         },
         {
           role: "user",
-          content:
-            "Hi eveyone, in this video we will be creating a Youtube clone'",
+          content: transcript,
         },
       ],
     },
   });
 
-  // get text:
   const title = body.choices[0]?.message.content;
 
-  await context.run("update-video", async () => {
+  if (!title) {
+    throw new Error("Bad request");
+  }
+
+  await context.run("update-video-title", async () => {
     await db
       .update(videos)
       .set({ title: title ?? video.title })
       .where(and(eq(videos.userId, userId), eq(videos.id, videoId)));
-  });
-
-  await context.run("second-step", () => {
-    console.log("second step ran");
   });
 });

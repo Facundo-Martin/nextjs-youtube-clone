@@ -13,6 +13,7 @@ import {
   CopyIcon,
   Globe2Icon,
   ImagePlusIcon,
+  Loader2Icon,
   LockIcon,
   MoreVerticalIcon,
   RotateCcwIcon,
@@ -51,6 +52,7 @@ import { snakeCaseToTitle } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ThumbnailUploadModal } from "./thumbnail-upload-modal";
+import { ThumbnailGenerationModal } from "./thumbnail-generate-modal";
 
 type Props = {
   videoId: string;
@@ -80,7 +82,16 @@ export const VideoForm = ({ videoId }: Props) => {
     onError: () => toast.error("Something went wrong"),
   });
 
-  const generateThumbnail = api.video.generateThumbnail.useMutation({
+  const generateTitle = api.video.generateTitle.useMutation({
+    onSuccess: () => {
+      toast.success("Background job started", {
+        description: "This may take some time",
+      });
+    },
+    onError: () => toast.error("Something went wrong"),
+  });
+
+  const generateDescription = api.video.generateDescription.useMutation({
     onSuccess: () => {
       toast.success("Background job started", {
         description: "This may take some time",
@@ -120,12 +131,19 @@ export const VideoForm = ({ videoId }: Props) => {
   };
 
   const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
+  const [thumbnailGenerationModalOpen, setThumbnailGenerationModalOpen] =
+    useState(false);
 
   return (
     <>
       <ThumbnailUploadModal
         open={thumbnailModalOpen}
         onOpenChange={setThumbnailModalOpen}
+        videoId={videoId}
+      />
+      <ThumbnailGenerationModal
+        open={thumbnailGenerationModalOpen}
+        onOpenChange={setThumbnailGenerationModalOpen}
         videoId={videoId}
       />
       <Form {...form}>
@@ -165,8 +183,26 @@ export const VideoForm = ({ videoId }: Props) => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    {/* TODO: Add AI generate button */}
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>
+                      <div className="flex items-center gap-x-2">
+                        Title
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          type="button"
+                          className="size-6 rounded-full"
+                          onClick={() => generateTitle.mutate({ videoId })}
+                          disabled={generateTitle.isPending}
+                        >
+                          {generateTitle.isPending ? (
+                            <Loader2Icon className="size-3 animate-spin" />
+                          ) : (
+                            <SparklesIcon className="size-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </FormLabel>
+
                     <FormControl>
                       <Input
                         {...field}
@@ -182,8 +218,25 @@ export const VideoForm = ({ videoId }: Props) => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    {/* TODO: Add AI generate button */}
-                    <FormLabel>Description</FormLabel>
+                    <div className="flex items-center gap-x-2">
+                      Description
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        type="button"
+                        className="size-6 rounded-full"
+                        onClick={() => generateDescription.mutate({ videoId })}
+                        disabled={
+                          generateDescription.isPending || !video.muxTrackId
+                        }
+                      >
+                        {generateDescription.isPending ? (
+                          <Loader2Icon className="size-3 animate-spin" />
+                        ) : (
+                          <SparklesIcon className="size-3" />
+                        )}
+                      </Button>
+                    </div>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -231,7 +284,7 @@ export const VideoForm = ({ videoId }: Props) => {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
-                                generateThumbnail.mutate({ videoId })
+                                setThumbnailGenerationModalOpen(true)
                               }
                             >
                               <SparklesIcon className="mr-1 size-4" />
