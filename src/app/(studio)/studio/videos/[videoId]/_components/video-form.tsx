@@ -156,7 +156,10 @@ export const VideoForm = ({ videoId }: Props) => {
               </p>
             </div>
             <div className="flex items-center gap-x-2">
-              <Button type="submit" disabled={updateVideo.isPending}>
+              <Button
+                type="submit"
+                disabled={updateVideo.isPending || !form.formState.isDirty}
+              >
                 Save
               </Button>
               <DropdownMenu>
