@@ -3,6 +3,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -74,7 +75,36 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const videoRelations = relations(videos, ({ one }) => ({
+export const videoViews = pgTable(
+  "video_views",
+  {
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "video_views_pk",
+      columns: [t.userId, t.videoId],
+    }),
+  ],
+);
+
+// Note: This is only for the realational API
+
+export const userRelations = relations(users, ({ many }) => ({
+  videos: many(videos),
+  videoViews: many(videoViews),
+}));
+
+export const videoRelations = relations(videos, ({ one, many }) => ({
   users: one(users, {
     fields: [videos.userId],
     references: [users.id],
@@ -83,13 +113,26 @@ export const videoRelations = relations(videos, ({ one }) => ({
     fields: [videos.categoryId],
     references: [categories.id],
   }),
+  views: many(videoViews),
 }));
 
-export const userRelations = relations(users, ({ many }) => ({
-  videos: many(videos),
+export const videoViewsRelations = relations(videoViews, ({ one }) => ({
+  users: one(users, {
+    fields: [videoViews.userId],
+    references: [users.id],
+  }),
+  videos: one(videos, {
+    fields: [videoViews.videoId],
+    references: [videos.id],
+  }),
 }));
 
 export type SelectVideo = typeof videos.$inferSelect;
 export const videoInsertSchema = createInsertSchema(videos);
 export const videoUpdateSchema = createUpdateSchema(videos);
 export const videoSelectSchema = createSelectSchema(videos);
+
+export type SelectVideoViews = typeof videos.$inferSelect;
+export const videoViewsInsertSchema = createInsertSchema(videos);
+export const videoViewsUpdateSchema = createUpdateSchema(videos);
+export const videoViewsSelectSchema = createSelectSchema(videos);
