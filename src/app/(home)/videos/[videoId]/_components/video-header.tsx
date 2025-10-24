@@ -12,10 +12,10 @@ type Props = {
 export const VideoHeader = ({ video }: Props) => {
   const compactViews = Intl.NumberFormat("en", {
     notation: "compact",
-  }).format(12);
+  }).format(video.videoViews);
   const expandedViews = Intl.NumberFormat("en", {
     notation: "standard",
-  }).format(12);
+  }).format(video.videoViews);
 
   const compactDate = formatDistanceToNow(video.createdAt, { addSuffix: true });
   const expandedDate = format(video.createdAt, "d MMM yyyy");
