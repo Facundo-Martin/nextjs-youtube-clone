@@ -6,13 +6,26 @@ import { api } from "@/trpc/react";
 import React from "react";
 import { VideoBanner } from "./video-banner";
 import { VideoHeader } from "./video-header";
+import { useAuth } from "@clerk/nextjs";
 
 type Props = {
   videoId: string;
 };
 
 export const VideoSection = ({ videoId }: Props) => {
+  const { isSignedIn } = useAuth();
+  const utils = api.useUtils();
   const [video] = api.video.getPublicVideo.useSuspenseQuery({ videoId });
+
+  const createVideoView = api.videoViews.create.useMutation({
+    onSuccess: () => utils.video.getPublicVideo.invalidate({ videoId }),
+  });
+
+  const onPlay = () => {
+    if (!isSignedIn) return;
+
+    createVideoView.mutate({ videoId });
+  };
 
   return (
     <>
@@ -26,7 +39,7 @@ export const VideoSection = ({ videoId }: Props) => {
       >
         <VideoPlayer
           autoPlay
-          onPlay={() => null}
+          onPlay={onPlay}
           playbackId={video.muxPlaybackId}
           thumbnailUrl={video.thumbnailUrl}
         />
