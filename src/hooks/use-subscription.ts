@@ -4,17 +4,17 @@ import { toast } from "sonner";
 import { useClerk } from "@clerk/nextjs";
 import { api } from "@/trpc/react";
 
-interface UseSubscriptionProps {
+type Props = {
   creatorId: string;
   isSubscribed: boolean;
   fromVideoId?: string;
-}
+};
 
 export const useSubscription = ({
   creatorId,
   isSubscribed,
   fromVideoId,
-}: UseSubscriptionProps) => {
+}: Props) => {
   const clerk = useClerk();
   const utils = api.useUtils();
 

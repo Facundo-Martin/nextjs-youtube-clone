@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { useSubscription } from "@/hooks/use-subscription";
 import type { RouterOutputs } from "@/trpc/react";
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
@@ -11,8 +12,11 @@ type Props = {
 
 export const VideoCreator = ({ user, videoId }: Props) => {
   const { userId: clerkUserId } = useAuth();
-
-  const isSubscribed = false;
+  const { onClick, isPending } = useSubscription({
+    creatorId: user.id,
+    isSubscribed: user.isViewerSubscribed,
+    fromVideoId: videoId,
+  });
 
   return (
     <div className="flex min-w-0 items-center justify-between gap-3 sm:items-start sm:justify-start">
@@ -31,11 +35,11 @@ export const VideoCreator = ({ user, videoId }: Props) => {
         </Button>
       ) : (
         <Button
-          onClick={() => null}
-          disabled={false}
+          onClick={onClick}
+          disabled={isPending}
           className="flex-none rounded-full"
         >
-          {isSubscribed ? "Unsubscribe" : "Subscribe"}
+          {user.isViewerSubscribed ? "Unsubscribe" : "Subscribe"}
         </Button>
       )}
     </div>

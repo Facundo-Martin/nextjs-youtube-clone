@@ -108,7 +108,7 @@ export const videoRouter = createTRPCRouter({
           .where(inArray(videoReactions.userId, userId ? [userId] : [])),
       );
 
-      const viewerSubscriptionsCte = ctx.db.$with("viewer_reactions").as(
+      const viewerSubscriptionsCte = ctx.db.$with("viewer_subscriptions").as(
         ctx.db
           .select()
           .from(subscriptions)
