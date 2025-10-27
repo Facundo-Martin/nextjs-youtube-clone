@@ -9,7 +9,7 @@ type Props = {
   videoId: RouterOutputs["video"]["getPublicVideo"]["id"];
 };
 
-export const VideoAuthor = ({ user, videoId }: Props) => {
+export const VideoCreator = ({ user, videoId }: Props) => {
   const { userId: clerkUserId } = useAuth();
 
   const isSubscribed = false;

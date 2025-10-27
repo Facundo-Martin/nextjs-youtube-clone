@@ -5,7 +5,7 @@ import { subscriptions } from "@/server/db/schema";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 export const subscriptionRouter = createTRPCRouter({
-  get: protectedProcedure
+  create: protectedProcedure
     .input(z.object({ creatorId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const [data] = await ctx.db
