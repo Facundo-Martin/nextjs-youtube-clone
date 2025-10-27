@@ -37,6 +37,7 @@ export const VideoCreator = ({ user, videoId }: Props) => {
         <Button
           onClick={onClick}
           disabled={isPending}
+          variant={user.isViewerSubscribed ? "secondary" : "default"}
           className="flex-none rounded-full"
         >
           {user.isViewerSubscribed ? "Unsubscribe" : "Subscribe"}
