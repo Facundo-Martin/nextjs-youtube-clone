@@ -122,12 +122,42 @@ export const videoReactions = pgTable(
   ],
 );
 
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    viewerId: uuid("viewer_id")
+      .references(() => users.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    creatorId: uuid("creator_id")
+      .references(() => users.id, {
+        onDelete: "cascade",
+      })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "subscriptions_pk",
+      columns: [t.viewerId, t.creatorId],
+    }),
+  ],
+);
+
 // Note: This is only for the realational API
 
 export const userRelations = relations(users, ({ many }) => ({
   videos: many(videos),
   videoViews: many(videoViews),
   videoReactions: many(videoReactions),
+  subscriptions: many(subscriptions, {
+    relationName: "viewer_subscriptions",
+  }),
+  subscribers: many(subscriptions, {
+    relationName: "creator_subscribers",
+  }),
 }));
 
 export const videoRelations = relations(videos, ({ one, many }) => ({
@@ -162,6 +192,19 @@ export const videoReactionsRelations = relations(videoReactions, ({ one }) => ({
   videos: one(videos, {
     fields: [videoReactions.videoId],
     references: [videos.id],
+  }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  viewerId: one(users, {
+    fields: [subscriptions.viewerId],
+    references: [users.id],
+    relationName: "viewer_subscriptions",
+  }),
+  creatorId: one(users, {
+    fields: [subscriptions.creatorId],
+    references: [users.id],
+    relationName: "creator_subscribers",
   }),
 }));
 
