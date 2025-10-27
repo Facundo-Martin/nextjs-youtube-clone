@@ -6,13 +6,23 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import {
+  subscriptions,
   users,
   videoReactions,
   videos,
   videoUpdateSchema,
   videoViews,
 } from "@/server/db/schema";
-import { and, desc, eq, getTableColumns, inArray, lt, or } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNotNull,
+  lt,
+  or,
+} from "drizzle-orm";
 import { mux } from "@/lib/mux";
 import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
@@ -98,12 +108,26 @@ export const videoRouter = createTRPCRouter({
           .where(inArray(videoReactions.userId, userId ? [userId] : [])),
       );
 
+      const viewerSubscriptionsCte = ctx.db.$with("viewer_reactions").as(
+        ctx.db
+          .select()
+          .from(subscriptions)
+          .where(inArray(subscriptions.viewerId, userId ? [userId] : [])),
+      );
+
       const [video] = await ctx.db
-        .with(viewerReactionsCte)
+        .with(viewerReactionsCte, viewerSubscriptionsCte)
         .select({
           ...getTableColumns(videos),
           user: {
             ...getTableColumns(users),
+            isViewerSubscribed: isNotNull(
+              viewerSubscriptionsCte.viewerId,
+            ).mapWith(Boolean),
+            subscriberCount: ctx.db.$count(
+              subscriptions,
+              eq(subscriptions.creatorId, users.id),
+            ),
           },
           videoViews: ctx.db.$count(
             videoViews,
@@ -127,7 +151,14 @@ export const videoRouter = createTRPCRouter({
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
-        .leftJoin(viewerReactionsCte, eq(viewerReactionsCte.videoId, videos.id))
+        .leftJoin(
+          viewerReactionsCte,
+          eq(viewerReactionsCte.videoId, videos.userId),
+        )
+        .leftJoin(
+          viewerSubscriptionsCte,
+          eq(viewerSubscriptionsCte.creatorId, users.id),
+        )
         .where(and(eq(videos.id, input.videoId)))
         .limit(1);
 
