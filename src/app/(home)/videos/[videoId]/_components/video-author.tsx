@@ -30,7 +30,11 @@ export const VideoAuthor = ({ user, videoId }: Props) => {
           <Link href={`/studio/videos/${videoId}`}>Edit video</Link>
         </Button>
       ) : (
-        <Button onClick={() => null} disabled={false} className="flex-none">
+        <Button
+          onClick={() => null}
+          disabled={false}
+          className="flex-none rounded-full"
+        >
           {isSubscribed ? "Unsubscribe" : "Subscribe"}
         </Button>
       )}
